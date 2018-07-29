@@ -1,0 +1,11 @@
+#!/bin/bash
+set -Ceu
+
+cd $(dirname $0)
+mkdir tmp
+mkdir src
+cd src
+git init
+git config user.name regans
+git config user.email "regans@example.com"
+git commit --allow-empty -m init

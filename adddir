@@ -1,0 +1,25 @@
+#!/bin/bash
+set -Ceu
+
+DIR_NAME=$1
+USER_NAME=$2
+USER_EMAIL=$3
+
+DIR0=$(cd $(dirname $0); pwd)/tmp/$DIR_NAME
+DIR1=$(pwd)
+DIR2=$(cd $(dirname $0); pwd)/template/
+
+mkdir $DIR0
+rsync -av $DIR2 $DIR0
+cd $DIR0
+git init
+git config user.name "$USER_NAME"
+git config user.email "$USER_EMAIL"
+git add -A
+git commit -m init
+
+cd $DIR1
+git clone $DIR0 $DIR_NAME
+cd $DIR_NAME
+git config user.name "$USER_NAME"
+git config user.email "$USER_EMAIL"

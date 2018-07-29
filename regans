@@ -1,0 +1,52 @@
+#!/bin/bash
+set -Ceu
+
+USER_NAME=$(git config user.name)
+USER_EMAIL=$(git config user.email)
+TMP_REPO_PATH=$(git config remote.origin.url)
+TMP_BRANCH=tmp-$(openssl rand -hex 10)
+DIR0=$(cd $(dirname $0); pwd)
+DIR_NAME=$(basename $(pwd))
+
+git add -A
+git commit -m regans > /dev/null || true
+git branch $TMP_BRANCH
+git push -q origin $TMP_BRANCH
+git branch -q -D $TMP_BRANCH
+
+cd $TMP_REPO_PATH
+git reset -q --hard
+git clean -q -fdx
+git checkout -q --detach $TMP_BRANCH
+git branch -q -D $TMP_BRANCH
+chmod +x build.sh
+OUT_FILE=$(openssl rand -hex 10)'.out'
+./build.sh ./$OUT_FILE
+if [[ ! -e ./$OUT_FILE ]]; then
+  echo "[ERROR] output file not found";
+  exit 100
+fi
+git clean -q -fdx
+
+exec 9>>$DIR0/lockfile
+flock -x 9
+
+cd $DIR0/src
+rsync -a --delete --exclude='.git' $TMP_REPO_PATH/ ./$DIR_NAME
+COUNTER=0
+if [[ -e ./_counter/$DIR_NAME ]]; then
+  COUNTER=$(cat ./_counter/$DIR_NAME)
+fi
+COUNTER=$((COUNTER+1))
+git config user.name "$USER_NAME"
+git config user.email "$USER_EMAIL"
+git add -A ./$DIR_NAME
+git commit -m "${DIR_NAME}${COUNTER}" > /dev/null || (echo "no change"; false)
+if [[ ! -d ./_counter ]]; then
+  mkdir ./_counter
+fi
+echo ${COUNTER} >| ./_counter/$DIR_NAME
+rsync -a --delete ./$DIR_NAME/ ./${DIR_NAME}${COUNTER}
+git add -A
+git commit -m "${DIR_NAME}${COUNTER}" > /dev/null
+echo "${DIR_NAME}${COUNTER} registered"
