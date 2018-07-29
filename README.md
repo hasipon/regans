@@ -16,6 +16,7 @@ $ ~/.regans/adddir $DIR_NAME $GIT_USER_NAME $GIT_USER_EMAIL
 
 回答登録
 ```
+## cd 作業ディレクトリ
 $ regans
 hasi7 registered
 ```
