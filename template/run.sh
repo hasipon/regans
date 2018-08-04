@@ -1,0 +1,3 @@
+EXE_PATH=$1
+
+${EXE_PATH}
